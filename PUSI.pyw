@@ -55,6 +55,7 @@ if sys.version_info < (2,6) or sys.version_info > (3,0):
 			print("wxPython 2.8 not found; attempting to use newer version, expect errors")
 
 import wx
+import wx.media
 
 # suppress nerd speak
 sys.tracebacklimit = 0
@@ -72,8 +73,8 @@ which_os = platform.system()
 class RedirectText(object):
 	def __init__(self,aWxTextCtrl):
 		self.out=aWxTextCtrl
- 	
- 	# Write string to wx window
+	
+	# Write string to wx window
 	def write(self,string):
 		wx.CallAfter(self.out.AppendText, string)
 
@@ -83,7 +84,7 @@ class pusi(wx.Frame):
 	def __init__(self,parent,id):
 
 		# Create the main window with the title PUSI <version number>
-		wx.Frame.__init__(self,parent,id,'PUSI %s' % ver, size=(800,320), style = wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+		wx.Frame.__init__(self,parent,id,'PUSI %s' % ver, size=(800,340), style = wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
 		
 		# Create a panel in the windows
 		self.panel = wx.Panel(self)
@@ -113,6 +114,9 @@ class pusi(wx.Frame):
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
 		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
 
+		self.currentVolume = 50
+		self.layoutControls()
+
 		# Bind button clicks to events (start|stop)
 		self.Bind(wx.EVT_BUTTON, self.penis_run, id=ID_PENIS_START)
 		self.Bind(wx.EVT_BUTTON, self.balls_run, id=ID_BALLS_START)
@@ -120,6 +124,9 @@ class pusi(wx.Frame):
 		# Set a watch variable to check later.  If we want the process to stop, self.watch becomes 1
 		self.penis_watcher = None
 		self.balls_watcher = None
+
+		pusi.hostile_alert = r'hostile.wav'
+		pusi.mediaPlayer.Load(pusi.hostile_alert)
 
 		# Shameless self adversiting
 		print "Python User Servicing Interface v%s by QQHeresATissue" % ver
@@ -132,6 +139,36 @@ class pusi(wx.Frame):
 	def balls_run(self, event):
 		if not self.balls_watcher:
 			self.balls_watcher = StartBALLS(self)
+
+	def layoutControls(self):
+
+		try:
+			pusi.mediaPlayer = wx.media.MediaCtrl(self.panel)
+		except NotImplementedError:
+			self.Destroy()
+			raise
+
+		wx.StaticText(self.panel, -1, 'Volume', (580, 294))
+		self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
+		self.volumeCtrl.SetRange(0, 100)
+		self.volumeCtrl.SetValue(self.currentVolume)
+		self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
+ 
+		self.Layout()
+
+	def onSetVolume(self, event):
+
+		self.currentVolume = self.volumeCtrl.GetValue()
+		self.mediaPlayer.SetVolume(self.currentVolume)
+
+#def onPlay(self, event):
+
+#	if not pusi.mediaPlayer.Play():
+#		wx.MessageBox("Unable to Play media : Unsupported format?",
+#			"ERROR",
+#			wx.ICON_ERROR | wx.OK)
+
+#	event.Skip()
 
 # Define watcher thread
 class StartPENIS(Thread):
@@ -251,11 +288,11 @@ class StartPENIS(Thread):
 				if utc in hostile_hit_sentence:
 				
 					if which_os == "Linux":
-						os.system("aplay -q ~/Downloads/beep.wav")
+						os.system("aplay -q ./hostile.wav")
 		
 					elif which_os == "Windows":
 						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)
-		
+
 					elif which_os == "Darwin":
 						print('\a')
 						print('\a')
@@ -293,8 +330,10 @@ class StartBALLS(Thread):
 					
 					if which_os == "Linux":
 						os.system("aplay -q ~/Downloads/sites_done.wav")
+					
 					elif which_os == "Windows":
 						winsound.Beep(750, 500), winsound.Beep(750, 500)
+					
 					elif which_os == "Darwin":
 						print('\a')
 						print('\a')
@@ -407,7 +446,7 @@ class StartBALLS(Thread):
 					continue
 	
 if __name__ == '__main__':
-	app=wx.PySimpleApp()
+	app=wx.App()
 	frame=pusi(parent=None,id=-1)
 	frame.Show()
 	app.MainLoop()

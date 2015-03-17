@@ -69,9 +69,11 @@ ID_BALLS_START = wx.NewId()
 # Are we on windows or linux?
 which_os = platform.system()
 
+# import required for windows alerts
 if which_os == "Windows":
 	import winsound
 
+# required for OSX username parsing
 elif which_os == "Darwin":
 	import getpass
 
@@ -225,12 +227,8 @@ class StartPENIS(Thread):
 		elif which_os == "Windows":
 			# Win 7 default log path
 			hostile_logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Chatlogs" )
-			# extra import to play the beep
-			#import winsound
 
 		elif which_os == "Darwin":
-			# os.getenv doesn't seem to work here...
-			#import getpass
 			# OSX default log path
 			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 
@@ -366,12 +364,8 @@ class StartBALLS(Thread):
 		elif which_os == "Windows":
 			# Win 7 default log path
 			logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Gamelogs" )
-			# extra import to play the beep
-			#import winsound
 	
 		elif which_os == "Darwin":
-			# os.getenv doesn't seem to work here...
-			#import getpass
 			# OSX default log path
 			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 	

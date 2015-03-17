@@ -86,6 +86,9 @@ class pusi(wx.Frame):
 		# Create the main window with the title PUSI <version number>
 		wx.Frame.__init__(self,parent,id,'PUSI %s' % ver, size=(800,340), style = wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
 		
+		# 
+		self.Bind(wx.EVT_CLOSE, self.Close)
+
 		# Create a panel in the windows
 		self.panel = wx.Panel(self)
 
@@ -114,8 +117,8 @@ class pusi(wx.Frame):
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
 		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
 
-		self.currentVolume = 50
-		self.layoutControls()
+		#self.currentVolume = 50
+		#self.layoutControls()
 
 		# Bind button clicks to events (start|stop)
 		self.Bind(wx.EVT_BUTTON, self.penis_run, id=ID_PENIS_START)
@@ -125,8 +128,8 @@ class pusi(wx.Frame):
 		self.penis_watcher = None
 		self.balls_watcher = None
 
-		pusi.hostile_alert = r'hostile.wav'
-		pusi.mediaPlayer.Load(pusi.hostile_alert)
+		#pusi.hostile_alert = r'hostile.wav'
+		#pusi.mediaPlayer.Load(pusi.hostile_alert)
 
 		# Shameless self adversiting
 		print "Python User Servicing Interface v%s by QQHeresATissue" % ver
@@ -140,26 +143,29 @@ class pusi(wx.Frame):
 		if not self.balls_watcher:
 			self.balls_watcher = StartBALLS(self)
 
-	def layoutControls(self):
+	#def layoutControls(self):
+#
+	#	try:
+	#		pusi.mediaPlayer = wx.media.MediaCtrl(self.panel)
+	#	except NotImplementedError:
+	#		self.Destroy()
+	#		raise
+#
+	#	wx.StaticText(self.panel, -1, 'Volume', (580, 294))
+	#	self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
+	#	self.volumeCtrl.SetRange(0, 100)
+	#	self.volumeCtrl.SetValue(self.currentVolume)
+	#	self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
+ #
+	#	self.Layout()
+#
+	#def onSetVolume(self, event):
+#
+	#	self.currentVolume = self.volumeCtrl.GetValue()
+	#	self.mediaPlayer.SetVolume(self.currentVolume)
 
-		try:
-			pusi.mediaPlayer = wx.media.MediaCtrl(self.panel)
-		except NotImplementedError:
-			self.Destroy()
-			raise
-
-		wx.StaticText(self.panel, -1, 'Volume', (580, 294))
-		self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
-		self.volumeCtrl.SetRange(0, 100)
-		self.volumeCtrl.SetValue(self.currentVolume)
-		self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
- 
-		self.Layout()
-
-	def onSetVolume(self, event):
-
-		self.currentVolume = self.volumeCtrl.GetValue()
-		self.mediaPlayer.SetVolume(self.currentVolume)
+	def Close(self, event):
+		self.Destroy()
 
 #def onPlay(self, event):
 
@@ -288,7 +294,7 @@ class StartPENIS(Thread):
 				if utc in hostile_hit_sentence:
 				
 					if which_os == "Linux":
-						os.system("aplay -q ./hostile.wav")
+						os.system("aplay -q ~/Downloads/hostile.wav")
 		
 					elif which_os == "Windows":
 						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)
@@ -424,7 +430,7 @@ class StartBALLS(Thread):
 	     
 					# play a tone to get attention
 					if which_os == "Linux":
-						os.system("aplay -q ~/Downloads/beep.wav")
+						os.system("aplay -q ~/Downloads/cash_money.wav")
 	      
 					elif which_os == "Windows":
 						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)

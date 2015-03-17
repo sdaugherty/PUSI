@@ -69,6 +69,13 @@ ID_BALLS_START = wx.NewId()
 # Are we on windows or linux?
 which_os = platform.system()
 
+if which_os == "Windows":
+	import winsound
+
+elif which_os == "Darwin":
+	import getpass
+
+
 # Setup a class for text redirection
 class RedirectText(object):
 	def __init__(self,aWxTextCtrl):
@@ -219,11 +226,11 @@ class StartPENIS(Thread):
 			# Win 7 default log path
 			hostile_logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Chatlogs" )
 			# extra import to play the beep
-			import winsound
+			#import winsound
 
 		elif which_os == "Darwin":
 			# os.getenv doesn't seem to work here...
-			import getpass
+			#import getpass
 			# OSX default log path
 			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 
@@ -360,11 +367,11 @@ class StartBALLS(Thread):
 			# Win 7 default log path
 			logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Gamelogs" )
 			# extra import to play the beep
-			import winsound
+			#import winsound
 	
 		elif which_os == "Darwin":
 			# os.getenv doesn't seem to work here...
-			import getpass
+			#import getpass
 			# OSX default log path
 			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 	

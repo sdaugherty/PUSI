@@ -427,7 +427,6 @@ class StartBALLS(Thread):
 					# debug statement
 					# print "%r" % (hit_sentence)
 
-					pusi.hostile_alert.Play()
 					# play a tone to get attention
 					if which_os == "Linux":
 						os.system("aplay -q %r" % tags_and_ammo)

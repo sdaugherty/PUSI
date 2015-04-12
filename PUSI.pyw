@@ -285,11 +285,11 @@ class StartPENIS(Thread):
 	
 				# print the alert
 				if which_os == "Windows":
-					print "PENIS INTEL ALERT!! %r - %r\n" % (hit_time, hostile_hit_word)
+					print "%s - PENIS INTEL ALERT!!\n" % (hit_time)
 					print "%r\n" % (hostile_hit_sentence)
 					wx.Yield()
 				else:
-					print "PENIS INTEL ALERT!! %r" % (hit_time)
+					print "%s - PENIS INTEL ALERT!!" % (hit_time)
 					print "%r\n" % (hostile_hit_sentence)
 					wx.Yield()
 		

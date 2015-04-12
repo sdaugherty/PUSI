@@ -25,6 +25,7 @@ import time
 from threading import *
 import sys
 import os
+from os.path import expanduser
 from datetime import datetime, timedelta, date
 import re
 import platform
@@ -61,10 +62,18 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.1b"
+ver = "0.2b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
+
+# Get current working direcroty
+pusi_dir = os.path.dirname(__file__)
+
+# Set wav names
+hostile_sound = os.path.join( pusi_dir, "sounds", "hostile.wav")
+done_sound = os.path.join( pusi_dir, "sounds", "sites_done.wav")
+tags_and_ammo = os.path.join ( pusi_dir, "sounds", "cash_money.wav")
 
 # Are we on windows or linux?
 which_os = platform.system()
@@ -76,7 +85,6 @@ if which_os == "Windows":
 # required for OSX username parsing
 elif which_os == "Darwin":
 	import getpass
-
 
 # Setup a class for text redirection
 class RedirectText(object):
@@ -126,8 +134,8 @@ class pusi(wx.Frame):
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
 		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
 
-		#self.currentVolume = 50
-		#self.layoutControls()
+		self.currentVolume = 50
+		self.layoutControls()
 
 		# Bind button clicks to events (start|stop)
 		self.Bind(wx.EVT_BUTTON, self.penis_run, id=ID_PENIS_START)
@@ -137,7 +145,7 @@ class pusi(wx.Frame):
 		self.penis_watcher = None
 		self.balls_watcher = None
 
-		#pusi.hostile_alert = r'hostile.wav'
+		pusi.hostile_alert = wx.Sound("hostile.wav")
 		#pusi.mediaPlayer.Load(pusi.hostile_alert)
 
 		# Shameless self adversiting
@@ -152,38 +160,38 @@ class pusi(wx.Frame):
 		if not self.balls_watcher:
 			self.balls_watcher = StartBALLS(self)
 
-	#def layoutControls(self):
-#
-	#	try:
-	#		pusi.mediaPlayer = wx.media.MediaCtrl(self.panel)
-	#	except NotImplementedError:
-	#		self.Destroy()
-	#		raise
-#
-	#	wx.StaticText(self.panel, -1, 'Volume', (580, 294))
-	#	self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
-	#	self.volumeCtrl.SetRange(0, 100)
-	#	self.volumeCtrl.SetValue(self.currentVolume)
-	#	self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
- #
-	#	self.Layout()
-#
-	#def onSetVolume(self, event):
-#
-	#	self.currentVolume = self.volumeCtrl.GetValue()
-	#	self.mediaPlayer.SetVolume(self.currentVolume)
+	def layoutControls(self):
+
+		try:
+			self.mediaPlayer = wx.media.MediaCtrl(self.panel)
+		except NotImplementedError:
+			self.Destroy()
+			raise
+
+		wx.StaticText(self.panel, -1, 'Volume', (580, 294))
+		self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
+		self.volumeCtrl.SetRange(0, 100)
+		self.volumeCtrl.SetValue(self.currentVolume)
+		self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
+
+		self.Layout()
+
+	def onSetVolume(self, event):
+
+		self.currentVolume = self.volumeCtrl.GetValue()
+		self.mediaPlayer.SetVolume(self.currentVolume)
 
 	def Close(self, event):
 		self.Destroy()
 
-#def onPlay(self, event):
+	def onPlay(self, event):
 
-#	if not pusi.mediaPlayer.Play():
-#		wx.MessageBox("Unable to Play media : Unsupported format?",
-#			"ERROR",
-#			wx.ICON_ERROR | wx.OK)
+		if not self.mediaPlayer.Play():
+			wx.MessageBox("Unable to Play media : Unsupported format?",
+				"ERROR",
+				wx.ICON_ERROR | wx.OK)
 
-#	event.Skip()
+		event.Skip()
 
 # Define watcher thread
 class StartPENIS(Thread):
@@ -215,22 +223,19 @@ class StartPENIS(Thread):
 	# Start the main thread for alerting
 	def run(self):
 
-		# get our current working directory
-		penis_dir = os.path.dirname(__file__)
-
 		print "Starting the Potentially Erroneous Nullsec Intelligence System"
 
 		if which_os == "Linux":
 			# Wine default path
-			hostile_logdir = os.path.join( "/home", os.getenv('USER'), "EVE", "logs", "Chatlogs" )
+			hostile_logdir = os.path.join( expanduser("~"), "EVE", "logs", "Chatlogs" )
 
 		elif which_os == "Windows":
 			# Win 7 default log path
-			hostile_logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Chatlogs" )
+			hostile_logdir = os.path.join( expanduser("~"), "Documents", "EVE", "logs", "Chatlogs" )
 
 		elif which_os == "Darwin":
 			# OSX default log path
-			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
+			hostile_logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 
 		else:
 
@@ -251,7 +256,7 @@ class StartPENIS(Thread):
 
 		# triggers to look for in the intel channels.  Read from json files for a specified system
 		# big thanks to Orestus for getting the branch systems together and suggesting the change!!
-		json_data = open(os.path.join( penis_dir, "systems", "%s.json" % system))
+		json_data = open(os.path.join( pusi_dir, "systems", "%s.json" % system))
 
 		data = json.load(json_data)
 
@@ -275,8 +280,8 @@ class StartPENIS(Thread):
 
 		# if the word matches a trigger, move on
 		for hostile_hit_word, hostile_hit_sentence in self.hostile_watch(logfile, hostile_words):
-		#print "%r | %r | %r | %r" % (hostile_hit_word, hostile_fn, hostile_words, hostile_hit_sentence)
-			
+			#print "%r | %r | %r | %r" % (hostile_hit_word, self.hostile_words, hostile_hit_sentence)
+
 			# if someone is just asking for status, ignore the hit
 			if not any(status_word in hostile_hit_sentence for status_word in status_words):
 
@@ -287,8 +292,8 @@ class StartPENIS(Thread):
 	
 				# print the alert
 				if which_os == "Windows":
-					print "PENIS INTEL ALERT!! %r - %r\r\n" % (hit_time, hostile_hit_word)
-					print "%r\r\n" % (hostile_hit_sentence)
+					print "PENIS INTEL ALERT!! %r - %r\n" % (hit_time, hostile_hit_word)
+					print "%r\n" % (hostile_hit_sentence)
 					wx.Yield()
 				else:
 					print "PENIS INTEL ALERT!! %r" % (hit_time)
@@ -299,7 +304,7 @@ class StartPENIS(Thread):
 				if utc in hostile_hit_sentence:
 				
 					if which_os == "Linux":
-						os.system("aplay -q ~/Downloads/hostile.wav")
+						os.system("aplay -q %r" % hostile_sound)
 		
 					elif which_os == "Windows":
 						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)
@@ -340,7 +345,7 @@ class StartBALLS(Thread):
 					print "%r - Sites done (or something is wrong)\n" % (time.strftime('%H:%M:%S'))
 					
 					if which_os == "Linux":
-						os.system("aplay -q ~/Downloads/sites_done.wav")
+						os.system("aplay -q %r" % done_sound)
 					
 					elif which_os == "Windows":
 						winsound.Beep(750, 500), winsound.Beep(750, 500)
@@ -359,15 +364,15 @@ class StartBALLS(Thread):
 
 		if which_os == "Linux":
 			# Wine default path
-			logdir = os.path.join( "/home", os.getenv('USER'), "EVE", "logs", "Gamelogs" )
+			logdir = os.path.join( expanduser("~"), "EVE", "logs", "Gamelogs" )
 	
 		elif which_os == "Windows":
 			# Win 7 default log path
-			logdir = os.path.join( "C:/", "Users", os.getenv('USERNAME'), "Documents", "EVE", "logs", "Gamelogs" )
+			logdir = os.path.join( expanduser("~"), "Documents", "EVE", "logs", "Gamelogs" )
 	
 		elif which_os == "Darwin":
 			# OSX default log path
-			hostile_logdir = os.path.join( "/Users", getpass.getuser(), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
+			hostile_logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 	
 		else:
 	
@@ -428,10 +433,11 @@ class StartBALLS(Thread):
 					wx.Yield()
 					# debug statement
 					# print "%r" % (hit_sentence)
-	     
+
+					pusi.hostile_alert.Play()
 					# play a tone to get attention
 					if which_os == "Linux":
-						os.system("aplay -q ~/Downloads/cash_money.wav")
+						os.system("aplay -q %r" % tags_and_ammo)
 	      
 					elif which_os == "Windows":
 						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)

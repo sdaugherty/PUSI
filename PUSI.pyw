@@ -78,9 +78,9 @@ tags_and_ammo = os.path.join ( pusi_dir, "sounds", "cash_money.wav")
 # Are we on windows or linux?
 which_os = platform.system()
 
-# import required for windows alerts
 if which_os == "Windows":
 	import winsound
+	from winsound import PlaySound, SND_FILENAME
 
 # Setup a class for text redirection
 class RedirectText(object):
@@ -140,9 +140,6 @@ class pusi(wx.Frame):
 		# Set a watch variable to check later.  If we want the process to stop, self.watch becomes 1
 		self.penis_watcher = None
 		self.balls_watcher = None
-
-		pusi.hostile_alert = wx.Sound("hostile.wav")
-		#pusi.mediaPlayer.Load(pusi.hostile_alert)
 
 		# Shameless self adversiting
 		print "Python User Servicing Interface v%s by QQHeresATissue" % ver
@@ -303,7 +300,7 @@ class StartPENIS(Thread):
 						os.system("aplay -q %r" % hostile_sound)
 		
 					elif which_os == "Windows":
-						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)
+						winsound.PlaySound("%s" % hostile_sound,SND_FILENAME)
 
 					elif which_os == "Darwin":
 						print('\a')
@@ -344,7 +341,7 @@ class StartBALLS(Thread):
 						os.system("aplay -q %r" % done_sound)
 					
 					elif which_os == "Windows":
-						winsound.Beep(750, 500), winsound.Beep(750, 500)
+						winsound.PlaySound("%s" % done_sound,SND_FILENAME)
 					
 					elif which_os == "Darwin":
 						print('\a')
@@ -436,7 +433,7 @@ class StartBALLS(Thread):
 						os.system("aplay -q %r" % tags_and_ammo)
 	      
 					elif which_os == "Windows":
-						winsound.Beep(500, 500), winsound.Beep(500, 500), winsound.Beep(500, 500)
+						winsound.PlaySound("%s" % tags_and_ammo,SND_FILENAME)
 	
 					elif which_os == "Darwin":
 						print('\a')

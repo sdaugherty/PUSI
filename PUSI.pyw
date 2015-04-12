@@ -82,10 +82,6 @@ which_os = platform.system()
 if which_os == "Windows":
 	import winsound
 
-# required for OSX username parsing
-elif which_os == "Darwin":
-	import getpass
-
 # Setup a class for text redirection
 class RedirectText(object):
 	def __init__(self,aWxTextCtrl):
@@ -372,7 +368,7 @@ class StartBALLS(Thread):
 	
 		elif which_os == "Darwin":
 			# OSX default log path
-			hostile_logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
+			logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
 	
 		else:
 	

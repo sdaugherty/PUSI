@@ -114,8 +114,8 @@ class pusi(wx.Frame):
 		sys.stderr=redir
 		
 		# Create a start and stop button
-		self.penis_start = wx.Button(self.panel, ID_PENIS_START, label="Start PENIS", pos=(10,10), size=(90,25))
-		self.balls_start = wx.Button(self.panel, ID_BALLS_START, label="Start BALLS", pos=(410, 10), size=(90,25))
+		self.penis_start = wx.Button(self.panel, ID_PENIS_START, label="Start PENIS", pos=(410,10), size=(90,25))
+		self.balls_start = wx.Button(self.panel, ID_BALLS_START, label="Start BALLS", pos=(10, 10), size=(90,25))
 
 		# Define regions we have systems for in a list
 		region_list = [ 'DEK', 'BRN', 'FTN', 'PBF' ]

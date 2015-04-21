@@ -62,7 +62,7 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.2b"
+ver = "0.3b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -106,7 +106,7 @@ class pusi(wx.Frame):
 		self.panel = wx.Panel(self)
 
 		# Setup logging early so we see it in the panel
-		logbox = wx.TextCtrl(self.panel, wx.ID_ANY, size = (780, 250), pos = (10,40), style = wx.TE_MULTILINE| wx.TE_READONLY | wx.HSCROLL)
+		logbox = wx.TextCtrl(self.panel, wx.ID_ANY, size = (780, 290), pos = (10,40), style = wx.TE_MULTILINE| wx.TE_READONLY | wx.HSCROLL)
 
 		# Redirect all printed messages to the panel
 		redir=RedirectText(logbox)
@@ -130,9 +130,6 @@ class pusi(wx.Frame):
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
 		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
 
-		self.currentVolume = 50
-		self.layoutControls()
-
 		# Bind button clicks to events (start|stop)
 		self.Bind(wx.EVT_BUTTON, self.penis_run, id=ID_PENIS_START)
 		self.Bind(wx.EVT_BUTTON, self.balls_run, id=ID_BALLS_START)
@@ -153,38 +150,8 @@ class pusi(wx.Frame):
 		if not self.balls_watcher:
 			self.balls_watcher = StartBALLS(self)
 
-	def layoutControls(self):
-
-		try:
-			self.mediaPlayer = wx.media.MediaCtrl(self.panel)
-		except NotImplementedError:
-			self.Destroy()
-			raise
-
-		wx.StaticText(self.panel, -1, 'Volume', (580, 294))
-		self.volumeCtrl = wx.Slider(self.panel, -1, pos=(640, 290), size=(150, 25), style=wx.SL_HORIZONTAL)
-		self.volumeCtrl.SetRange(0, 100)
-		self.volumeCtrl.SetValue(self.currentVolume)
-		self.volumeCtrl.Bind(wx.EVT_SLIDER, self.onSetVolume)
-
-		self.Layout()
-
-	def onSetVolume(self, event):
-
-		self.currentVolume = self.volumeCtrl.GetValue()
-		self.mediaPlayer.SetVolume(self.currentVolume)
-
 	def Close(self, event):
 		self.Destroy()
-
-	def onPlay(self, event):
-
-		if not self.mediaPlayer.Play():
-			wx.MessageBox("Unable to Play media : Unsupported format?",
-				"ERROR",
-				wx.ICON_ERROR | wx.OK)
-
-		event.Skip()
 
 # Define watcher thread
 class StartPENIS(Thread):

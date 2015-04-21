@@ -118,7 +118,7 @@ class pusi(wx.Frame):
 		self.balls_start = wx.Button(self.panel, ID_BALLS_START, label="Start BALLS", pos=(10, 10), size=(90,25))
 
 		# Define regions we have systems for in a list
-		region_list = [ 'DEK', 'BRN', 'FTN', 'PBF' ]
+		region_list = [ 'dek', 'brn', 'ftn', 'pbf' ]
 		# Create text "Region" before the dropdown box
 		wx.StaticText(self.panel, -1, 'Region', (105,15))
 
@@ -240,7 +240,7 @@ class StartPENIS(Thread):
 		system = pusi.system_select.GetValue()
 
 		# select identified logs and sort by date
-		hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith('%s.CFC' % region)])
+		hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith('%s.imperium' % region)])
 		# testing line so we shit up Corp chat not intel chans
 		# hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith('Corp')])
 

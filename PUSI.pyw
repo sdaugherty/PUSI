@@ -58,17 +58,11 @@ if sys.version_info < (2,6) or sys.version_info > (3,0):
 import wx
 import wx.media
 
-# python black magic
-reload(sys)
-
 # suppress nerd speak
 sys.tracebacklimit = 0
 
-# set default to utf-8
-sys.setdefaultencoding('utf8')
-
 # set a version
-ver = "0.4b"
+ver = "0.5b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -213,7 +207,7 @@ class StartPENIS(Thread):
 		system = pusi.system_select.GetValue()
 
 		# select identified logs and sort by date
-		hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith('%s.imperium' % region)])
+		hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith("%s.imperium" % str(region))])
 		# testing line so we shit up Corp chat not intel chans
 		# hostile_tmp = sorted([ f for f in os.listdir(hostile_logdir) if f.startswith('Corp')])
 
@@ -222,7 +216,7 @@ class StartPENIS(Thread):
 
 		# triggers to look for in the intel channels.  Read from json files for a specified system
 		# big thanks to Orestus for getting the branch systems together and suggesting the change!!
-		json_data = open(os.path.join( pusi_dir, "systems", "%s.json" % system))
+		json_data = open(os.path.join( pusi_dir, "systems", "%s.json" % str(system)))
 
 		data = json.load(json_data)
 

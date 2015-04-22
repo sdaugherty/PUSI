@@ -58,11 +58,17 @@ if sys.version_info < (2,6) or sys.version_info > (3,0):
 import wx
 import wx.media
 
+# python black magic
+reload(sys)
+
 # suppress nerd speak
 sys.tracebacklimit = 0
 
+# set default to utf-8
+sys.setdefaultencoding('utf8')
+
 # set a version
-ver = "0.3b"
+ver = "0.4b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()

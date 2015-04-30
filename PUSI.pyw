@@ -1,9 +1,9 @@
-#  PUSI.py 
+#  PUSI.py
 #  Python User Servicing Interface
-#  Controller script to PENIS and BALLS 
-#  AFK away and listen for a ding.  
+#  Controller script to PENIS and BALLS
+#  AFK away and listen for a ding.
 #
-#  Written in python for you Alex.... 
+#  Written in python for you Alex....
 #
 # Copyright (c) 2015, QQHeresATissue <QQHeresATissue@gmail.com>
 #
@@ -62,7 +62,7 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.5b"
+ver = "0.6b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -86,7 +86,7 @@ if which_os == "Windows":
 class RedirectText(object):
 	def __init__(self,aWxTextCtrl):
 		self.out=aWxTextCtrl
-	
+
 	# Write string to wx window
 	def write(self,string):
 		wx.CallAfter(self.out.AppendText, string)
@@ -98,23 +98,23 @@ class pusi(wx.Frame):
 
 		# Create the main window with the title PUSI <version number>
 		wx.Frame.__init__(self,parent,id,'PUSI %s' % ver, size=(800,340), style = wx.DEFAULT_FRAME_STYLE & ~ (wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
-		
-		# 
+
+		#
 		self.Bind(wx.EVT_CLOSE, self.Close)
 
 		# Create a panel in the windows
 		self.panel = wx.Panel(self)
 
 		# Setup logging early so we see it in the panel
-		logbox = wx.TextCtrl(self.panel, wx.ID_ANY, size = (780, 290), pos = (10,40), style = wx.TE_MULTILINE| wx.TE_READONLY | wx.HSCROLL)
+		logbox = wx.TextCtrl(self.panel, wx.ID_ANY, size = (780, 290), pos = (10,40), style = wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
 		# Redirect all printed messages to the panel
 		redir=RedirectText(logbox)
 		sys.stdout=redir
 		sys.stderr=redir
-		
+
 		# Create a start and stop button
-		self.penis_start = wx.Button(self.panel, ID_PENIS_START, label="Start PENIS", pos=(410,10), size=(90,25))
+		self.penis_start = wx.Button(self.panel, ID_PENIS_START, label="Start PENIS", pos=(530,10), size=(90,25))
 		self.balls_start = wx.Button(self.panel, ID_BALLS_START, label="Start BALLS", pos=(10, 10), size=(90,25))
 
 		# Define regions we have systems for in a list
@@ -129,6 +129,12 @@ class pusi(wx.Frame):
 		#Create the system input box
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
 		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
+
+		# Create the range input box
+		range_list = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10' ]
+		wx.StaticText(self.panel, -1, 'Range', (410, 15))
+		pusi.range_select = wx.ComboBox(self.panel, -1, '', pos=(450,10), size=(80,25), choices = range_list, style=wx.CB_DROPDOWN)
+		pusi.range_select.SetSelection(5)
 
 		# Bind button clicks to events (start|stop)
 		self.Bind(wx.EVT_BUTTON, self.penis_run, id=ID_PENIS_START)
@@ -165,18 +171,18 @@ class StartPENIS(Thread):
 		self.start()
 
 	# setup our log file watcher, only open it once and update when a new line is written
-	def hostile_watch(self, logfile, words):
+	def hostile_watch(self, logfile, region_data):
 
 		fp = open(logfile, 'r')
 		while True:
-			
+
 			# remove null padding (lol ccp)
 			new = re.sub(r'[^\x20-\x7e]', '', fp.readline())
 
 			if new:
-				for word in words:
-					if word in new:
-						yield (word, new)
+				relevant_system = self.find_system_in_string(new, region_data)
+				if relevant_system:
+					yield (relevant_system, new)
 			else:
 				time.sleep(0.01)
 
@@ -216,11 +222,10 @@ class StartPENIS(Thread):
 
 		# triggers to look for in the intel channels.  Read from json files for a specified system
 		# big thanks to Orestus for getting the branch systems together and suggesting the change!!
-		json_data = open(os.path.join( pusi_dir, "systems", "%s.json" % str(system)))
+		# Support expanded by Narex Vivari
+		json_data = open(os.path.join( pusi_dir, "regions", "%s.json" % str(region)))
 
-		data = json.load(json_data)
-
-		hostile_words = data
+		region_data = json.load(json_data)
 
 		json_data.close()
 
@@ -239,40 +244,84 @@ class StartPENIS(Thread):
 		print "parsing from - Intel:  %s\n" % (hostile_tmp[-1])
 
 		# if the word matches a trigger, move on
-		for hostile_hit_word, hostile_hit_sentence in self.hostile_watch(logfile, hostile_words):
-			#print "%r | %r | %r | %r" % (hostile_hit_word, self.hostile_words, hostile_hit_sentence)
+		for related_system, hostile_hit_sentence in self.hostile_watch(logfile, region_data):
+			#print "%r | %r | %r | %r" % (related_system, self.hostile_words, hostile_hit_sentence)
 
 			# if someone is just asking for status, ignore the hit
 			if not any(status_word in hostile_hit_sentence for status_word in status_words):
 
-				# get the current time for each event
-				hit_time = time.strftime('%H:%M:%S')
-				# get current date/time in UTC
-				utc = time.strftime('[ %Y.%m.%d %H:%M', gmtime())[:17]
-	
-				# print the alert
-				if which_os == "Windows":
-					print "%s - PENIS INTEL ALERT!!\n" % (hit_time)
-					print "%r\n" % (hostile_hit_sentence)
-					wx.Yield()
-				else:
-					print "%s - PENIS INTEL ALERT!!" % (hit_time)
-					print "%r\n" % (hostile_hit_sentence)
-					wx.Yield()
-		
-				# play a tone to get attention, only if its recent!
-				if utc in hostile_hit_sentence:
-				
-					if which_os == "Linux":
-						os.system("aplay -q %r" % hostile_sound)
-		
-					elif which_os == "Windows":
-						winsound.PlaySound("%s" % hostile_sound,SND_FILENAME)
+				# find distance to the reported system
+				distance = self.find_system_distance(system, related_system, region_data, int(pusi.range_select.GetValue()))
+				if distance != None:
 
-					elif which_os == "Darwin":
-						print('\a')
-						print('\a')
-						print('\a')
+					# get the current time for each event
+					hit_time = time.strftime('%H:%M:%S')
+					# get current date/time in UTC
+					utc = time.strftime('[ %Y.%m.%d %H:%M', gmtime())[:17]
+
+					# print the alert
+					if which_os == "Windows":
+						print "%s - PENIS INTEL ALERT!!\n" % (hit_time)
+						print "%r (%s jumps)\n" % (hostile_hit_sentence, distance)
+						wx.Yield()
+					else:
+						print "%s - PENIS INTEL ALERT!!" % (hit_time)
+						print "%r (%s jumps)\n" % (hostile_hit_sentence, distance)
+						wx.Yield()
+
+					# play a tone to get attention, only if its recent!
+					if utc in hostile_hit_sentence:
+
+						if which_os == "Linux":
+							os.system("aplay -q %r" % hostile_sound)
+
+						elif which_os == "Windows":
+							winsound.PlaySound("%s" % hostile_sound,SND_FILENAME)
+
+						elif which_os == "Darwin":
+							print('\a')
+							print('\a')
+							print('\a')
+
+	def find_system_in_string(self, string, region_data):
+		for system in region_data:
+			if system['name'] in string:
+				return system['name']
+
+		return None
+
+	def find_system_distance(self, start_system, dest_system, region_data, range):
+		routes_found = []
+		# find the distance of all routes from start system to destination system
+		self.system_distance_recursive(start_system, dest_system, region_data, 0, range, [], routes_found)
+		# return shortest path
+		return min(routes_found) if len(routes_found) else None
+
+	def system_distance_recursive(self, cur_system, dest_system, region_data, distance, range, checked, routes_found):
+		# exit if out of range or system is already checked
+		if distance > range or cur_system in checked:
+			return
+
+		if cur_system == dest_system:
+			# destination found, so we don't need to check further connections
+			routes_found.append(distance)
+			return
+
+		for connected_system in self.get_connected_systems(cur_system, region_data):
+			# duplicate existing path and append this system
+			now_checked = list(checked)
+			now_checked.append(cur_system)
+			# recursively find distance, if a path exists
+			conn_dist = self.system_distance_recursive(connected_system, dest_system, region_data, distance + 1, range, now_checked, routes_found)
+			if conn_dist >= 0:
+				# this system is parth of a path to destination, so add the distance
+				routes_found.append(conn_dist)
+
+	def get_connected_systems(self, system, region_data):
+		# find the system and return its connections. can easily be optimized using a dict if performance is an issue (which it shouldn't be when only checking regions)
+		system_data = [x['connections'] for x in region_data if x['name'] == system]
+		# connections across regions exist in the data, but are currently not supported. but people probably don't report cross-region intel anyway
+		return system_data[0] if len(system_data) > 0 else []
 
 # Define BALLS watcher thread
 class StartBALLS(Thread):
@@ -288,11 +337,11 @@ class StartBALLS(Thread):
 	# setup our log file watcher, only open it once and update when a new line is written
 	def balls_watch(self, fn, words):
 		done_count = 0
-	
+
 		fp = open(fn, 'r')
 		while True:
 			new = fp.readline()
-		
+
 			if new:
 				done_count = 0
 				for word in words:
@@ -303,20 +352,20 @@ class StartBALLS(Thread):
 				if done_count > 129:
 					print "BALLS Notification"
 					print "%r - Sites done (or something is wrong)\n" % (time.strftime('%H:%M:%S'))
-					
+
 					if which_os == "Linux":
 						os.system("aplay -q %r" % done_sound)
-					
+
 					elif which_os == "Windows":
 						winsound.PlaySound("%s" % done_sound,SND_FILENAME)
-					
+
 					elif which_os == "Darwin":
 						print('\a')
 						print('\a')
 						print('\a')
-					
+
 					done_count = 0
-		
+
 				time.sleep(0.5)
 
 	def run(self):
@@ -325,29 +374,29 @@ class StartBALLS(Thread):
 		if which_os == "Linux":
 			# Wine default path
 			logdir = os.path.join( expanduser("~"), "EVE", "logs", "Gamelogs" )
-	
+
 		elif which_os == "Windows":
 			# Win 7 default log path
 			logdir = os.path.join( expanduser("~"), "Documents", "EVE", "logs", "Gamelogs" )
-	
+
 		elif which_os == "Darwin":
 			# OSX default log path
 			logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
-	
+
 		else:
-	
+
 			print "What fucking OS are you running?"
-	
+
 		# sort by date
 		tmp = sorted([ f for f in os.listdir(logdir) if f.startswith('201')])
-	
+
 		# grab the most recent file
 		fn = os.path.join( logdir, tmp[-1] )
-	
+
 		print "\nStarting the Background Alert for Lucrative Loot Script"
-	
+
 		print "parsing from %s\n" % tmp[-1]
-	
+
 		# triggers to look for in the log file
 		words = [ "Dread Guristas", \
 				"Dark Blood", \
@@ -376,15 +425,15 @@ class StartBALLS(Thread):
 				"Setele Schellan", \
 				"Tuvan Orth", \
 				"Warp scramble attempt" ]
-	
+
 		# Don't trigger if we are accepting or getting a contract
 		false_pos = [ "following items", \
 					"question" ]
-	
+
 		for hit_word, hit_sentence in self.balls_watch(fn, words):
-	
+
 			if not any(false_word in hit_sentence for false_word in false_pos):
-	
+
 				if count < 1:
 					count = count + 1
 					# log the combat lines involving the spawn
@@ -397,26 +446,26 @@ class StartBALLS(Thread):
 					# play a tone to get attention
 					if which_os == "Linux":
 						os.system("aplay -q %r" % tags_and_ammo)
-	      
+
 					elif which_os == "Windows":
 						winsound.PlaySound("%s" % tags_and_ammo,SND_FILENAME)
-	
+
 					elif which_os == "Darwin":
 						print('\a')
 						print('\a')
 						print('\a')
-	
+
 					else:
 						print "What fucking system are you running?"
 						break
-	
+
 				elif count == 30:
 					count = 0
 					continue
 				else:
 					count = count + 1
 					continue
-	
+
 if __name__ == '__main__':
 	app=wx.App()
 	frame=pusi(parent=None,id=-1)

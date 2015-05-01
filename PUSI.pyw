@@ -62,7 +62,7 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.6b"
+ver = "0.6.1b"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()

@@ -118,7 +118,7 @@ class pusi(wx.Frame):
 		self.balls_start = wx.Button(self.panel, ID_BALLS_START, label="Start BALLS", pos=(10, 10), size=(90,25))
 
 		# Define regions we have systems for in a list
-		region_list = [ 'dek', 'brn', 'ftn', 'fade' ]
+		region_list = [ 'dek', 'brn', 'ftn', 'fade', 'tnl', 'tri', 'vnl', 'vale' ]
 		# Create text "Region" before the dropdown box
 		wx.StaticText(self.panel, -1, 'Region', (105,15))
 

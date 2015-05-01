@@ -12,9 +12,9 @@ wget -q -O- http://evemaps.dotlan.net/region/${1} | grep -e '/map/'${1} | cut -d
 
 if [ ! -d "tmp" ]; then
   mkdir ./tmp
-fi  
+fi
 
-for i in `cat ${1}_sys`; do 
+for i in `cat ${1}_sys`; do
   echo "Parsing ${1}/${i}"
   wget -4 -O- http://evemaps.dotlan.net/range/1/${i} | grep '/map' | cut -d ':' -f 2 | cut -d '"' -f 1 | sort -u | grep , | sed -e 's/,/","/g' | sed 's/^/["/;s/$/"]/' > ./tmp/${i}.json
 done;
@@ -23,15 +23,16 @@ find ./ -size 0 -print0 | xargs -0 rm
 rm ${1}_sys
 
 echo "[" > ${1}.json
-for i in `ls ./systems`; do
+for i in `ls ./tmp`; do
 
-  for s in `cat ./systems/${i}`; do
+  for s in `cat ./tmp/${i}`; do
 
-    echo "	{ ""name"": ""${i}"", ""connections"": ${s} }," >> ${1}.json
+    echo "	{ \"name\": \"${i}\", \"connections\": ${s} }," >> ${1}.json
 
   done
 
 done
+sed -i '$s/..$//' ${1}.json
 echo "]" >> ${1}.json
 
-rm -r tmp/*
+#rm -r tmp/*

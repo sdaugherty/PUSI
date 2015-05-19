@@ -59,10 +59,10 @@ import wx
 import wx.media
 
 # suppress nerd speak
-#sys.tracebacklimit = 0
+sys.tracebacklimit = 0
 
 # set a version
-ver = "0.7"
+ver = "0.7.1"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -163,7 +163,6 @@ class pusi(wx.Frame):
 
 		time.sleep(0.01)
 		partial = pusi.system_select.GetValue()[:caret]
-		print "%s" % partial
 		match = self.match_partial_system(partial)
 		if match != None and len(partial) > 0:
 			pusi.system_select.ChangeValue(match)

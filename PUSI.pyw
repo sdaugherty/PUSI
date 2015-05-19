@@ -62,7 +62,7 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.7.1"
+ver = "0.7.2"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -273,11 +273,11 @@ class StartPENIS(Thread):
 
 					# print the alert
 					if which_os == "Windows":
-						print "%s - PENIS INTEL ALERT!!\n" % (hit_time)
+						print "%s - PENIS ALERT!!\n" % (hit_time)
 						print "%r (%s jumps)\n" % (hostile_hit_sentence, distance)
 						wx.Yield()
 					else:
-						print "%s - PENIS INTEL ALERT!!" % (hit_time)
+						print "%s - PENIS ALERT!!" % (hit_time)
 						print "%r (%s jumps)\n" % (hostile_hit_sentence, distance)
 						wx.Yield()
 

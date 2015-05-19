@@ -178,7 +178,6 @@ class pusi(wx.Frame):
 		return None
 
 	def load_region(self, region):
-		print "%s" % os.path.join( pusi_dir, "regions", "%s.json" % str(region))
 		json_data = open(os.path.join( pusi_dir, "regions", "%s.json" % str(region)))
 		pusi.current_region = json.load(json_data)
 		json_data.close()

@@ -24,12 +24,12 @@ from time import gmtime
 import time
 from threading import *
 import sys
-import os
-from os.path import expanduser
 from datetime import datetime, timedelta, date
 import re
-import platform
 import json
+import os
+import platform
+from utils import EVEDir
 
 # Do initial checks, code taken from Pyfa... cause that shit rocks
 if sys.version_info < (2,6) or sys.version_info > (3,0):
@@ -62,7 +62,7 @@ import wx.media
 sys.tracebacklimit = 0
 
 # set a version
-ver = "0.6.1b"
+ver = "0.7"
 
 ID_PENIS_START = wx.NewId()
 ID_BALLS_START = wx.NewId()
@@ -126,9 +126,14 @@ class pusi(wx.Frame):
 		pusi.region_select = wx.ComboBox(self.panel, -1, pos=(150,10), size=(75,25), choices = region_list, style=wx.CB_DROPDOWN)
 		pusi.region_select.SetSelection(0)
 
+		# Load triggers from json courtesty of Orestus, Narex Vivari for adding auto complete. 
+		self.load_region(pusi.region_select.GetValue());
+		pusi.region_select.Bind(wx.EVT_COMBOBOX, self.region_selection_changed, pusi.region_select)
+
 		#Create the system input box
 		wx.StaticText(self.panel, -1, 'System', (230, 15))
-		pusi.system_select = wx.TextCtrl(self.panel, -1, '', (280,10), (120,-1))
+		pusi.system_select = wx.TextCtrl(self.panel, -1, '', pos=(280,10), size=(120,-1))
+		pusi.system_select.Bind(wx.EVT_TEXT, self.system_text_changed, pusi.system_select)
 
 		# Create the range input box
 		range_list = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10' ]
@@ -146,6 +151,30 @@ class pusi(wx.Frame):
 
 		# Shameless self adversiting
 		print "Python User Servicing Interface v%s by QQHeresATissue" % ver
+
+	def region_selection_changed(self, event):
+		self.load_region(pusi.region_select.GetValue())
+
+	def system_text_changed(self, event):
+		caret = pusi.system_select.GetInsertionPoint()
+		partial = pusi.system_select.GetValue()[:caret]
+		match = self.match_partial_system(partial)
+		if match != None and len(partial) > 0:
+			pusi.system_select.ChangeValue(match)
+		else:
+			pusi.system_select.ChangeValue(partial)
+		pusi.system_select.SetInsertionPoint(caret)
+
+	def match_partial_system(self, text):
+		for system in pusi.current_region:
+			if system['name'].startswith(text):
+				return system['name']
+		return None
+
+	def load_region(self, region):
+		json_data = open(os.path.join( pusi_dir, "regions", "%s.json" % str(region)))
+		pusi.current_region = json.load(json_data)
+		json_data.close()
 
 	# Setup a functions to start the watcher thread
 	def penis_run(self, event):
@@ -171,7 +200,7 @@ class StartPENIS(Thread):
 		self.start()
 
 	# setup our log file watcher, only open it once and update when a new line is written
-	def hostile_watch(self, logfile, region_data):
+	def hostile_watch(self, logfile):
 
 		fp = open(logfile, 'r')
 		while True:
@@ -180,7 +209,7 @@ class StartPENIS(Thread):
 			new = re.sub(r'[^\x20-\x7e]', '', fp.readline())
 
 			if new:
-				relevant_system = self.find_system_in_string(new, region_data)
+				relevant_system = self.find_system_in_string(new)
 				if relevant_system:
 					yield (relevant_system, new)
 			else:
@@ -191,21 +220,7 @@ class StartPENIS(Thread):
 
 		print "Starting the Potentially Erroneous Nullsec Intelligence System"
 
-		if which_os == "Linux":
-			# Wine default path
-			hostile_logdir = os.path.join( expanduser("~"), "EVE", "logs", "Chatlogs" )
-
-		elif which_os == "Windows":
-			# Win 7 default log path
-			hostile_logdir = os.path.join( expanduser("~"), "Documents", "EVE", "logs", "Chatlogs" )
-
-		elif which_os == "Darwin":
-			# OSX default log path
-			hostile_logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
-
-		else:
-
-			print "What fucking OS are you running?"
+		hostile_logdir = EVEDir.chat_logs
 
 		# get region based on our dropdown box selection
 		region = pusi.region_select.GetValue()
@@ -220,23 +235,14 @@ class StartPENIS(Thread):
 		# grab the most recent file for each log
 		logfile = os.path.join( hostile_logdir, hostile_tmp[-1] )
 
-		# triggers to look for in the intel channels.  Read from json files for a specified system
-		# big thanks to Orestus for getting the branch systems together and suggesting the change!!
-		# Support expanded by Narex Vivari
-		json_data = open(os.path.join( pusi_dir, "regions", "%s.json" % str(region)))
-
-		region_data = json.load(json_data)
-
-		json_data.close()
-
 		# ignore status requests and clr reports
-		status_words = [ "status", \
-						"Status", \
-						"clear", \
-						"Clear", \
-						"stat", \
-						"Stat", \
-						"clr", \
+		status_words = [ "status",
+						"Status",
+						"clear",
+						"Clear",
+						"stat",
+						"Stat",
+						"clr",
 						"Clr",
 						"EVE System" ]
 
@@ -244,14 +250,14 @@ class StartPENIS(Thread):
 		print "parsing from - Intel:  %s\n" % (hostile_tmp[-1])
 
 		# if the word matches a trigger, move on
-		for related_system, hostile_hit_sentence in self.hostile_watch(logfile, region_data):
+		for related_system, hostile_hit_sentence in self.hostile_watch(logfile):
 			#print "%r | %r | %r | %r" % (related_system, self.hostile_words, hostile_hit_sentence)
 
 			# if someone is just asking for status, ignore the hit
 			if not any(status_word in hostile_hit_sentence for status_word in status_words):
 
 				# find distance to the reported system
-				distance = self.find_system_distance(system, related_system, region_data, int(pusi.range_select.GetValue()))
+				distance = self.find_system_distance(system, related_system, int(pusi.range_select.GetValue()))
 				if distance != None:
 
 					# get the current time for each event
@@ -283,21 +289,21 @@ class StartPENIS(Thread):
 							print('\a')
 							print('\a')
 
-	def find_system_in_string(self, string, region_data):
-		for system in region_data:
+	def find_system_in_string(self, string):
+		for system in pusi.current_region:
 			if system['name'] in string:
 				return system['name']
 
 		return None
 
-	def find_system_distance(self, start_system, dest_system, region_data, range):
+	def find_system_distance(self, start_system, dest_system, range):
 		routes_found = []
 		# find the distance of all routes from start system to destination system
-		self.system_distance_recursive(start_system, dest_system, region_data, 0, range, [], routes_found)
+		self.system_distance_recursive(start_system, dest_system, 0, range, [], routes_found)
 		# return shortest path
 		return min(routes_found) if len(routes_found) else None
 
-	def system_distance_recursive(self, cur_system, dest_system, region_data, distance, range, checked, routes_found):
+	def system_distance_recursive(self, cur_system, dest_system, distance, range, checked, routes_found):
 		# exit if out of range or system is already checked
 		if distance > range or cur_system in checked:
 			return
@@ -307,19 +313,19 @@ class StartPENIS(Thread):
 			routes_found.append(distance)
 			return
 
-		for connected_system in self.get_connected_systems(cur_system, region_data):
+		for connected_system in self.get_connected_systems(cur_system):
 			# duplicate existing path and append this system
 			now_checked = list(checked)
 			now_checked.append(cur_system)
 			# recursively find distance, if a path exists
-			conn_dist = self.system_distance_recursive(connected_system, dest_system, region_data, distance + 1, range, now_checked, routes_found)
+			conn_dist = self.system_distance_recursive(connected_system, dest_system, distance + 1, range, now_checked, routes_found)
 			if conn_dist >= 0:
 				# this system is parth of a path to destination, so add the distance
 				routes_found.append(conn_dist)
 
-	def get_connected_systems(self, system, region_data):
+	def get_connected_systems(self, system):
 		# find the system and return its connections. can easily be optimized using a dict if performance is an issue (which it shouldn't be when only checking regions)
-		system_data = [x['connections'] for x in region_data if x['name'] == system]
+		system_data = [x['connections'] for x in pusi.current_region if x['name'] == system]
 		# connections across regions exist in the data, but are currently not supported. but people probably don't report cross-region intel anyway
 		return system_data[0] if len(system_data) > 0 else []
 
@@ -371,21 +377,7 @@ class StartBALLS(Thread):
 	def run(self):
 		count = 0
 
-		if which_os == "Linux":
-			# Wine default path
-			logdir = os.path.join( expanduser("~"), "EVE", "logs", "Gamelogs" )
-
-		elif which_os == "Windows":
-			# Win 7 default log path
-			logdir = os.path.join( expanduser("~"), "Documents", "EVE", "logs", "Gamelogs" )
-
-		elif which_os == "Darwin":
-			# OSX default log path
-			logdir = os.path.join( expanduser("~"), "Library", "Application Support", "EVE Online", "p_drive", "User", "My Documents", "EVE", "logs", "Chatlogs" )
-
-		else:
-
-			print "What fucking OS are you running?"
+		logdir = EVEDir.game_logs
 
 		# sort by date
 		tmp = sorted([ f for f in os.listdir(logdir) if f.startswith('201')])
@@ -398,36 +390,36 @@ class StartBALLS(Thread):
 		print "parsing from %s\n" % tmp[-1]
 
 		# triggers to look for in the log file
-		words = [ "Dread Guristas", \
-				"Dark Blood", \
-				"True Sansha", \
-				"Shadow Serpentis", \
-				"Sentient", \
-				"Domination",\
-				"Estamel Tharchon", \
-				"Vepas Minimala", \
-				"Thon Eney", \
-				"Kaikka Peunato", \
-				"Gotan Kreiss", \
-				"Hakim Stormare",\
-				"Mizuro Cybon", \
-				"Tobias Kruzhor", \
-				"Ahremen Arkah", \
-				"Draclira Merlonne", \
-				"Raysere Giant",\
-				"Tairei Namazoth", \
-				"Brokara Ryver", \
-				"Chelm Soran", \
-				"Selynne Mardakar", \
-				"Vizan Ankonin", \
-				"Brynn Jerdola",\
-				"Cormack Vaaja", \
-				"Setele Schellan", \
-				"Tuvan Orth", \
+		words = [ "Dread Guristas",
+				"Dark Blood",
+				"True Sansha",
+				"Shadow Serpentis",
+				"Sentient",
+				"Domination"
+				"Estamel Tharchon",
+				"Vepas Minimala",
+				"Thon Eney",
+				"Kaikka Peunato",
+				"Gotan Kreiss",
+				"Hakim Stormare",
+				"Mizuro Cybon",
+				"Tobias Kruzhor",
+				"Ahremen Arkah",
+				"Draclira Merlonne",
+				"Raysere Giant",
+				"Tairei Namazoth",
+				"Brokara Ryver",
+				"Chelm Soran",
+				"Selynne Mardakar",
+				"Vizan Ankonin",
+				"Brynn Jerdola",
+				"Cormack Vaaja",
+				"Setele Schellan",
+				"Tuvan Orth",
 				"Warp scramble attempt" ]
 
 		# Don't trigger if we are accepting or getting a contract
-		false_pos = [ "following items", \
+		false_pos = [ "following items",
 					"question" ]
 
 		for hit_word, hit_sentence in self.balls_watch(fn, words):

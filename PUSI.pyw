@@ -59,7 +59,7 @@ import wx
 import wx.media
 
 # suppress nerd speak
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 # set a version
 ver = "0.7"
@@ -156,14 +156,21 @@ class pusi(wx.Frame):
 		self.load_region(pusi.region_select.GetValue())
 
 	def system_text_changed(self, event):
-		caret = pusi.system_select.GetInsertionPoint()
+		if which_os == "Linux":
+			caret = pusi.system_select.GetInsertionPoint() + 1
+		else:
+			caret = pusi.system_select.GetInsertionPoint()
+
+		time.sleep(0.01)
 		partial = pusi.system_select.GetValue()[:caret]
+		print "%s" % partial
 		match = self.match_partial_system(partial)
 		if match != None and len(partial) > 0:
 			pusi.system_select.ChangeValue(match)
 		else:
 			pusi.system_select.ChangeValue(partial)
 		pusi.system_select.SetInsertionPoint(caret)
+
 
 	def match_partial_system(self, text):
 		for system in pusi.current_region:
@@ -172,6 +179,7 @@ class pusi(wx.Frame):
 		return None
 
 	def load_region(self, region):
+		print "%s" % os.path.join( pusi_dir, "regions", "%s.json" % str(region))
 		json_data = open(os.path.join( pusi_dir, "regions", "%s.json" % str(region)))
 		pusi.current_region = json.load(json_data)
 		json_data.close()
